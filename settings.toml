@@ -1,2 +1,3 @@
 [default]
 application_name="aws-helpful-scripts"
+application_description="The AWS helpful scripts is a CLI (Command Line Interface) with helpful commands to help some people to manage some stuff in the AWS Cloud"
