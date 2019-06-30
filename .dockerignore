@@ -1,0 +1,9 @@
+*.pyc
+*/__pycache__/
+*.ipynb_checkpoints/
+.github/*
+.gitignore
+LICENSE
+Makefile
+Dockerfile
+README.md

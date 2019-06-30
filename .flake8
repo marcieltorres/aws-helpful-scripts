@@ -1,0 +1,3 @@
+[flake8]
+exclude = .git,install,venv,tests,docs
+max-line-length = 180

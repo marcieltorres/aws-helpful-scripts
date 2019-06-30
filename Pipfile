@@ -1,0 +1,18 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+flake8 = "==3.7.7"
+pylint = "==2.3.1"
+autopep8 = "==1.4.4"
+
+[packages]
+dynaconf = "==2.0.3"
+argparse = "==1.4.0"
+boto3 = "==1.9.93"
+botocore = "==1.12.93"
+
+[requires]
+python_version = "3.6"
