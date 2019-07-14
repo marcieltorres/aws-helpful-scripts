@@ -1,65 +1,65 @@
 import logging
-import time
-import os
-import sys
-import socket
-import json
-import traceback
+from json import dumps
+from socket import gethostname
+from time import time
 
 from dynaconf import settings
 
 
-INITIALIZED = False
+logger = None
+
+
+def create_logger():
+    global logger
+
+    if logger is not None:
+        return logger
+
+    logger = logging.getLogger(settings('application_name'))
+    logger.setLevel(level=1)
+
+    handler_stream = logging.StreamHandler()
+    handler_stream.formatter = LogFormatter()
+    logger.addHandler(handler_stream)
+    logger.propagate = False
+
+    return logger
 
 
 class LogFormatter(logging.Formatter):
-    def __init__(self, environment, application):
-        self._env = environment
-        self._application = application
-        super().__init__()
+    def __init__(self):
+        self._env = "DEV"
+        self._host = gethostname()
+        logging.Formatter.__init__(self)
 
     def format(self, record):
-        data = {
-            'timestamp': record.created,
-            'short_message': str(record.msg),
-            'host': socket.gethostname(),
-            'level': record.levelno,
-            'Severity': record.levelname,
-            '_product': 'listings',
-            '_application': self._application,
-            '_environment': self._env,
-            '_log_type': 'application'
+        log = {
+            "timestamp": time(),
+            "_application": settings('application_name'),
+            "_environment": self._env,
+            "host": self._host,
+            "level": self.__get_log_level(record.levelno),
+            "_log_type": "application",
+            "short_message": record.msg,
         }
 
-        if record.levelname == 'ERROR':
-            lines = traceback.format_exception(record.exc_info[0],
-                                               record.exc_info[1],
-                                               record.exc_info[2])
-            data['full_message'] = ''.join('' + line for line in lines)
+        for attr in vars(record):
+            if attr[0] == "_":
+                log[attr] = getattr(record, attr)
 
-        return json.dumps(data)
+        return dumps(log)
+
+    @staticmethod
+    def __get_log_level(levelno):
+        return {
+            logging.INFO: 6,
+            logging.DEBUG: 7,
+            logging.ERROR: 3,
+            logging.WARN: 4,
+            logging.WARNING: 4,
+            logging.CRITICAL: 2,
+        }.get(levelno, 6)
 
 
-def init():
-    # pylint: disable=global-statement
-    global INITIALIZED
-
-    if INITIALIZED:
-        return
-    else:
-        INITIALIZED = True
-
-    application = settings('application_name')
-    env = os.getenv('ENV', 'DEV')
-    default_log_level = logging.getLevelName(os.getenv('LOG_LEVEL', 'INFO'))
-
-    log_format = '%(asctime)s - %(name)s - %(thread)d - %(levelname)s - %(message)s'
-    formatter = logging.Formatter(log_format, datefmt='%Y-%m-%d %H:%M:%S')
-    formatter.converter = time.gmtime
-    logger = logging.getLogger()
-    logger.setLevel(default_log_level)
-
-    formatter = LogFormatter(env, application)
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+if logger is None:
+    create_logger()
