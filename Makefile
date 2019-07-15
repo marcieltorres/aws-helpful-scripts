@@ -2,12 +2,11 @@ IMAGE_NAME=aws-helpful-scripts
 
 .PHONY: build
 build:
-	docker build -t $(IMAGE_NAME) .
+	docker build --target builder -t $(IMAGE_NAME) .
+
+build/dev:
+	docker build --target builder-dev-packages -t $(IMAGE_NAME) .
 
 .PHONY: lint
-lint: build
-	docker run $(IMAGE_NAME) flake8 .
-
-.PHONY: test
-test:
-	make -e ENV=TEST build
+lint: build/dev
+	docker run $(IMAGE_NAME) pipenv run flake8
